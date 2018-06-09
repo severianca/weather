@@ -14,19 +14,36 @@ import android.widget.Button;
 import android.widget.TextView;
 
 
+
 public class MainActivity extends AppCompatActivity {
 
     TextView text_show_latitude;
     TextView text_show_longitude;
-        private LocationManager manager;
+    TextView text_show_city;
+
+    TextView cityField, detailsField, currentTemperatureField, humidity_field, pressure_field, updatedField;
+
+    private LocationManager manager;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        text_show_latitude = (TextView) findViewById(R.id.text_latitude);
+
+       /* text_show_latitude = (TextView) findViewById(R.id.text_latitude);
         text_show_longitude = (TextView) findViewById(R.id.text_longitude);
+        text_show_city = (TextView) findViewById(R.id.text_city);
+        */
+
+        cityField = (TextView)findViewById(R.id.city_field);
+        updatedField = (TextView)findViewById(R.id.updated_field);
+        detailsField = (TextView)findViewById(R.id.details_field);
+        currentTemperatureField = (TextView)findViewById(R.id.current_temperature_field);
+        humidity_field = (TextView)findViewById(R.id.humidity_field);
+        pressure_field = (TextView)findViewById(R.id.pressure_field);
+
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -45,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
             if (location!=null) {
                 text_show_latitude.setText(String.valueOf(location.getLatitude()));
                 text_show_longitude.setText(String.valueOf(location.getLongitude()));
+
+
             }
             else{
                 text_show_latitude.setText("Sorry, location");
