@@ -13,7 +13,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     TextView text_show_city;
 
     TextView cityField, detailsField, currentTemperatureField, humidity_field, pressure_field, updatedField;
+
+
+    public ArrayList<MainWeather> response;
 
     private LocationManager manager;
 
@@ -48,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+
+        Response response = Client.getApiService().getMyGSON().enqueue(new Callback<MainWeather>);
 
 
     }
