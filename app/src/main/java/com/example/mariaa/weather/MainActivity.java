@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import retrofit2.Call;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+
 
     }
         @SuppressLint("MissingPermission")
