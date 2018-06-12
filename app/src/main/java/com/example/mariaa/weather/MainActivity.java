@@ -12,7 +12,9 @@ import android.location.LocationManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import retrofit2.Call;
@@ -24,12 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     TextView text_show_latitude;
     TextView text_show_longitude;
-    TextView text_show_city;
+    //TextView response;
 
-    TextView cityField, detailsField, currentTemperatureField, humidity_field, pressure_field, updatedField;
-
-
-    public ArrayList<MainWeather> response;
 
     private LocationManager manager;
 
@@ -40,26 +38,32 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       /* text_show_latitude = (TextView) findViewById(R.id.text_latitude);
-        text_show_longitude = (TextView) findViewById(R.id.text_longitude);
-        text_show_city = (TextView) findViewById(R.id.text_city);
-        */
+                TextView weather = (TextView) findViewById(R.id.textView2);
 
-        cityField = (TextView)findViewById(R.id.city_field);
-        updatedField = (TextView)findViewById(R.id.updated_field);
-        detailsField = (TextView)findViewById(R.id.details_field);
-        currentTemperatureField = (TextView)findViewById(R.id.current_temperature_field);
-        humidity_field = (TextView)findViewById(R.id.humidity_field);
-        pressure_field = (TextView)findViewById(R.id.pressure_field);
+      //  manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
 
-        manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        try {
+            Response response = Client.getApiService().getMyGSON("Ufa").execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        Response response = Client.getApiService().getMyGSON().enqueue(new Callback<MainWeather>);
+        Client.getApiService().getMyGSON("Ufa").enqueue(new Callback<MainWeather>() {
+            @Override
+            public void onFailure(Call<MainWeather> call, Throwable t) {
+                Toast toast = Toast.makeText(getApplicationContext(), "An error occurred during networking", Toast.LENGTH_SHORT);
+                toast.show();
+            }
 
+            @Override
+            public void onResponse (Call <MainWeather> call, Response <MainWeather> response) {
+                response.body().getMain().getTemp();
+            }
+        }
 
-    }
+    }/*
         @SuppressLint("MissingPermission")
         @Override
         protected void onResume() {
@@ -94,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onProviderDisabled(String provider) {
         }
-    };
+    };*/
 
 }
 

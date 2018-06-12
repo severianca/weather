@@ -6,6 +6,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Client extends Application {
 
+
+
     private static final String ROOT_URL = "http://api.openweathermap.org";
 
     private static Retrofit gerRetrofitInstance() {
