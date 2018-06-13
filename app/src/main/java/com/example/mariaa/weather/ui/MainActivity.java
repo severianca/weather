@@ -3,6 +3,7 @@ package com.example.mariaa.weather.ui;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,14 +39,11 @@ public class MainActivity extends AppCompatActivity {
         text_city = findViewById(R.id.text_city);
         text_city_enter_user = findViewById(R.id.text_city_enter_user);
 
-        text_city_enter_user.setOnKeyListener();
-       // loadWeatherByCity("Ufa");
-
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
     }
 
-                @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission")
         @Override
         protected void onResume() {
             super.onResume();
@@ -75,17 +73,17 @@ public class MainActivity extends AppCompatActivity {
            }
    };
 
-
     private void loadWeatherByCity(final String city) {
         App.getApiService().getWeather(city).enqueue(new Callback<MainWeather>() {
 
-            public void onFailure(Call<MainWeather> call, Throwable t) {
-                Toast.makeText(getApplicationContext(), "An error occurred during networking", Toast.LENGTH_SHORT).show();
-            }
-
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
                 text_city.setText(city);
-                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273));
+                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
+            }
+
+            public void onFailure(Call<MainWeather> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "An error occurred during networking", Toast.LENGTH_SHORT).show();
+                text_city.setText(city);
             }
         });
     }
@@ -99,15 +97,14 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
                 text_city.setText(response.body().getName());
-                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273));
+                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
             }
         });
     }
 
-
-
-
-
+    public void but_show_click(View view) {
+        loadWeatherByCity(text_city_enter_user.getText().toString());
+    }
 
 }
 
