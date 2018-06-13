@@ -1,6 +1,7 @@
-package com.example.mariaa.weather;
+package com.example.mariaa.weather.model;
 
 import java.util.List;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -16,7 +17,7 @@ public class MainWeather {
     private String base;
     @SerializedName("main")
     @Expose
-    private Main main;
+    private WeatherModel main;
     @SerializedName("visibility")
     @Expose
     private int visibility;
@@ -66,11 +67,11 @@ public class MainWeather {
         this.base = base;
     }
 
-    public Main getMain() {
+    public WeatherModel getMain() {
         return main;
     }
 
-    public void setMain(Main main) {
+    public void setMain(WeatherModel main) {
         this.main = main;
     }
 

@@ -1,12 +1,13 @@
 package com.example.mariaa.weather;
 
 import android.app.Application;
+
+import com.example.mariaa.weather.network.ApiService;
+
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class Client extends Application {
-
-
+public class App extends Application {
 
     private static final String ROOT_URL = "http://api.openweathermap.org";
 

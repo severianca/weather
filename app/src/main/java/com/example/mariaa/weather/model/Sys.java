@@ -1,4 +1,4 @@
-package com.example.mariaa.weather;
+package com.example.mariaa.weather.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
