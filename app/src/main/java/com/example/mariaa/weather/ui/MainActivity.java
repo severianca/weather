@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,9 +34,11 @@ public class MainActivity extends AppCompatActivity {
 
     TextView text_temp, text_city, text_wind_clouds;
     EditText text_city_enter_user;
+    ImageView imageView;
     private LocationManager manager;
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
+    String Icon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +50,10 @@ public class MainActivity extends AppCompatActivity {
         text_city_enter_user = findViewById(R.id.text_city_enter_user);
         text_wind_clouds = findViewById(R.id.text_wind_clouds);
 
+        imageView = (ImageView) findViewById(R.id.imageView);
+
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
 
     }
 
@@ -66,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                latitude = location.getLatitude();
                if (!one_response) {
                    loadWeatherLocation(longitude, latitude);
+                   //imageView.setImageResource(R.drawable.ic_01d);
                    one_response= true;
                }
                }
@@ -83,6 +90,53 @@ public class MainActivity extends AppCompatActivity {
            }
    };
 
+    public void ShowIconWeather (String Icon) {
+
+        switch (Icon) {
+
+            case "01d" : imageView.setImageResource(R.drawable.ic_01d);
+                break;
+            case "01n" : imageView.setImageResource(R.drawable.ic_01n);
+                break;
+            case "02d" : imageView.setImageResource(R.drawable.ic_02d);
+                break;
+            case "02n" : imageView.setImageResource(R.drawable.ic_02n);
+                break;
+            case "03d" : imageView.setImageResource(R.drawable.ic_03d);
+                break;
+            case "03n" : imageView.setImageResource(R.drawable.ic_03n);
+                break;
+            case "04d" : imageView.setImageResource(R.drawable.ic_04d);
+                break;
+            case "04n" : imageView.setImageResource(R.drawable.ic_04n);
+                break;
+            case "09d" : imageView.setImageResource(R.drawable.ic_09d);
+                break;
+            case "09n" : imageView.setImageResource(R.drawable.ic_09n);
+                break;
+            case "10d" : imageView.setImageResource(R.drawable.ic_10d);
+                break;
+            case "10n" : imageView.setImageResource(R.drawable.ic_10n);
+                break;
+            case "11d" : imageView.setImageResource(R.drawable.ic_11d);
+                break;
+            case "11n" : imageView.setImageResource(R.drawable.ic_11n);
+                break;
+            case "13d" : imageView.setImageResource(R.drawable.ic_13d);
+                break;
+            case "13n" : imageView.setImageResource(R.drawable.ic_13n);
+                break;
+            case "50d" : imageView.setImageResource(R.drawable.ic_50d);
+                break;
+            case "50n" : imageView.setImageResource(R.drawable.ic_50n);
+                break;
+                default: imageView.setImageResource(R.drawable.ic_launcher_foreground);
+
+        }
+
+    }
+
+
     private void loadWeatherByCity(final String city) {
         App.getApiService().getWeather(city).enqueue(new Callback<MainWeather>() {
 
@@ -90,7 +144,8 @@ public class MainActivity extends AppCompatActivity {
                 text_city.setText(city);
                 text_wind_clouds.setText("wind "+ response.body().getWind().getSpeed() + " m/s. " + "clouds " + response.body().getClouds().getAll() + "%" );
                 text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
-                response.body().getWeather().get(0).getIcon();
+                Icon = response.body().getWeather().get(0).getIcon();
+                ShowIconWeather(Icon);
             }
 
             public void onFailure(Call<MainWeather> call, Throwable t) {
@@ -110,6 +165,9 @@ public class MainActivity extends AppCompatActivity {
                 text_city.setText(response.body().getName());
                 text_wind_clouds.setText("wind "+ response.body().getWind().getSpeed() + " m/s. " + "clouds " + response.body().getClouds().getAll() + "%" );
                 text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
+                Icon = response.body().getWeather().get(0).getIcon();
+                ShowIconWeather(Icon);
+
             }
         });
     }
