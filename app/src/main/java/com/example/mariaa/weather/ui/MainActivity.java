@@ -1,15 +1,18 @@
 package com.example.mariaa.weather.ui;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Icon;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,13 +35,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView text_temp, text_city, text_wind_clouds;
+    TextView text_temp, text_city, text_wind_clouds, textView;
     EditText text_city_enter_user;
     ImageView imageView;
     private LocationManager manager;
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
-    String Icon;
+    String City, Wind, Clouds, Temp, Icon;
+    DBHelper dbHelper;
+    SQLiteDatabase DBWeather;
+    ContentValues contentValues;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        dbHelper = new DBHelper(this);
+
+        DBWeather = dbHelper.getWritableDatabase();
+
+        contentValues = new ContentValues();
 
     }
 
@@ -72,12 +83,12 @@ public class MainActivity extends AppCompatActivity {
                latitude = location.getLatitude();
                if (!one_response) {
                    loadWeatherLocation(longitude, latitude);
-                   //imageView.setImageResource(R.drawable.ic_01d);
                    one_response= true;
                }
                }
-               else
+               else {
                Toast.makeText(getApplicationContext(), "отсутствует подключение к интернету", Toast.LENGTH_SHORT).show();
+           }
                }
      @Override
        public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -136,22 +147,59 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     private void loadWeatherByCity(final String city) {
         App.getApiService().getWeather(city).enqueue(new Callback<MainWeather>() {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
-                text_city.setText(city);
-                text_wind_clouds.setText("wind "+ response.body().getWind().getSpeed() + " m/s. " + "clouds " + response.body().getClouds().getAll() + "%" );
-                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
+                City = city;
+                Wind = Double.toString(response.body().getWind().getSpeed());
+                Clouds = Double.toString(response.body().getClouds().getAll());
+                Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
                 Icon = response.body().getWeather().get(0).getIcon();
+                text_city.setText(City);
+                text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
+                text_temp.setText(Temp+" °C");
                 ShowIconWeather(Icon);
+
+               // AddInDB(City, Wind, Clouds, Temp, Icon);
             }
 
             public void onFailure(Call<MainWeather> call, Throwable t) {
                 Toast.makeText(getApplicationContext(), "An error occurred during networking", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public void AddInDB (String city, String wind, String clouds, String temp, String icon) {
+
+        contentValues.put(DBHelper.KEY_CITY, city);
+        contentValues.put(DBHelper.KEY_WIND, wind);
+        contentValues.put(DBHelper.KEY_CLOUDS, clouds);
+        contentValues.put(DBHelper.KEY_TEMP, temp);
+        contentValues.put(DBHelper.KEY_ICON, icon);
+
+        DBWeather.insert(DBHelper.TABLE_CONTACTS, null, contentValues);
+
+        Cursor cursor = DBWeather.query(DBHelper.TABLE_CONTACTS, null, null, null,null, null, null);
+
+        if (cursor.moveToFirst()){
+
+            int inIndex = cursor.getColumnIndex(DBHelper.KEY_ID);
+            int inCity = cursor.getColumnIndex(DBHelper.KEY_CITY);
+            int inWind = cursor.getColumnIndex(DBHelper.KEY_WIND);
+            int inClouds = cursor.getColumnIndex(DBHelper.KEY_CLOUDS);
+            int inTemp = cursor.getColumnIndex(DBHelper.KEY_TEMP);
+            int inIcon = cursor.getColumnIndex(DBHelper.KEY_ID);
+
+            do {
+                Log.d("mLog", "ID = " + cursor.getInt(inIndex) + " City = " + cursor.getString(inCity) + " Wind = " + cursor.getString(inWind) + " Clouds = " + cursor.getString(inClouds)
+                        + " Temp = " + cursor.getString(inTemp) + " Icon = " + cursor.getString(inIcon));
+            }
+            while (cursor.moveToNext());
+        }
+        cursor.close();
+        dbHelper.close();
+
     }
 
     private void loadWeatherLocation(final Double lon, final Double lat) {
@@ -162,11 +210,19 @@ public class MainActivity extends AppCompatActivity {
             }
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
-                text_city.setText(response.body().getName());
-                text_wind_clouds.setText("wind "+ response.body().getWind().getSpeed() + " m/s. " + "clouds " + response.body().getClouds().getAll() + "%" );
-                text_temp.setText(Double.toString((int) response.body().getMain().getTemp()-273)+" °C");
+                Log.d("mLog", "по координатам");
+
+                City = response.body().getName();
+                Wind = Double.toString(response.body().getWind().getSpeed());
+                Clouds = Double.toString(response.body().getClouds().getAll());
+                Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
                 Icon = response.body().getWeather().get(0).getIcon();
+                text_city.setText(City);
+                text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
+                text_temp.setText(Temp+" °C");
                 ShowIconWeather(Icon);
+
+                //AddInDB(City, Wind, Clouds, Temp, Icon);
 
             }
         });
