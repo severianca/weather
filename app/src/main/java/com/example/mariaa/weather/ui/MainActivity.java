@@ -1,5 +1,6 @@
 package com.example.mariaa.weather.ui;
 
+import android.arch.persistence.room.Room;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mariaa.weather.App;
+import com.example.mariaa.weather.DataBase.DataBaseWeather;
+import com.example.mariaa.weather.DataBase.WeatherDB;
 import com.example.mariaa.weather.R;
 import com.example.mariaa.weather.model.MainWeather;
 import com.example.mariaa.weather.model.Weather;
@@ -32,6 +35,8 @@ import android.location.LocationListener;
 
 import java.util.List;
 
+import static android.util.Log.*;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,9 +47,7 @@ public class MainActivity extends AppCompatActivity {
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
     String City, Wind, Clouds, Temp, Icon;
-    DBHelper dbHelper;
-    SQLiteDatabase DBWeather;
-    ContentValues contentValues;
+    public DataBaseWeather dataBaseWeather;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,11 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        dbHelper = new DBHelper(this);
-
-        DBWeather = dbHelper.getWritableDatabase();
-
-        contentValues = new ContentValues();
+        dataBaseWeather = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherDB").build();
 
     }
 
@@ -161,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 text_temp.setText(Temp+" °C");
                 ShowIconWeather(Icon);
 
-               // AddInDB(City, Wind, Clouds, Temp, Icon);
+               AddInDB(City, Wind, Clouds, Temp, Icon);
             }
 
             public void onFailure(Call<MainWeather> call, Throwable t) {
@@ -172,33 +171,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void AddInDB (String city, String wind, String clouds, String temp, String icon) {
 
-        contentValues.put(DBHelper.KEY_CITY, city);
-        contentValues.put(DBHelper.KEY_WIND, wind);
-        contentValues.put(DBHelper.KEY_CLOUDS, clouds);
-        contentValues.put(DBHelper.KEY_TEMP, temp);
-        contentValues.put(DBHelper.KEY_ICON, icon);
+        WeatherDB weather = new WeatherDB();
+        weather.setId(1);
+        weather.setCity(city);
+        weather.setWind(wind);
+        weather.setClouds(clouds);
+        weather.setTemn(temp);
+        weather.setIcon(icon);
 
-        DBWeather.insert(DBHelper.TABLE_CONTACTS, null, contentValues);
-
-        Cursor cursor = DBWeather.query(DBHelper.TABLE_CONTACTS, null, null, null,null, null, null);
-
-        if (cursor.moveToFirst()){
-
-            int inIndex = cursor.getColumnIndex(DBHelper.KEY_ID);
-            int inCity = cursor.getColumnIndex(DBHelper.KEY_CITY);
-            int inWind = cursor.getColumnIndex(DBHelper.KEY_WIND);
-            int inClouds = cursor.getColumnIndex(DBHelper.KEY_CLOUDS);
-            int inTemp = cursor.getColumnIndex(DBHelper.KEY_TEMP);
-            int inIcon = cursor.getColumnIndex(DBHelper.KEY_ID);
-
-            do {
-                Log.d("mLog", "ID = " + cursor.getInt(inIndex) + " City = " + cursor.getString(inCity) + " Wind = " + cursor.getString(inWind) + " Clouds = " + cursor.getString(inClouds)
-                        + " Temp = " + cursor.getString(inTemp) + " Icon = " + cursor.getString(inIcon));
-            }
-            while (cursor.moveToNext());
-        }
-        cursor.close();
-        dbHelper.close();
+        dataBaseWeather.daoWeather().AddWeather(weather);
+        Toast.makeText(getApplicationContext(),"seccess", Toast.LENGTH_LONG).show();
 
     }
 
@@ -210,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
-                Log.d("mLog", "по координатам");
 
                 City = response.body().getName();
                 Wind = Double.toString(response.body().getWind().getSpeed());
@@ -221,9 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
                 text_temp.setText(Temp+" °C");
                 ShowIconWeather(Icon);
-
-                //AddInDB(City, Wind, Clouds, Temp, Icon);
-
+                AddInDB(City, Wind, Clouds, Temp, Icon);
             }
         });
     }
@@ -233,9 +212,6 @@ public class MainActivity extends AppCompatActivity {
         //закрытие клавиатуры
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
-
-
-
     }
 
 }
