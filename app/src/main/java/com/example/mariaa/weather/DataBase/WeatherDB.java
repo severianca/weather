@@ -4,10 +4,12 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
-@Entity (tableName = "WeatherTable")
+import java.util.Date;
+
+@Entity
 public class WeatherDB {
 
-    @PrimaryKey
+    @PrimaryKey (autoGenerate = true)
     public long id;
     @ColumnInfo(name = "City")
     private String City;
@@ -67,4 +69,5 @@ public class WeatherDB {
     public void setIcon(String icon) {
         Icon = icon;
     }
+
 }

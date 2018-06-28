@@ -80,10 +80,11 @@
         android:orientation="vertical">
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/but_database"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
+            android:onClick="but_show_database"
             android:text="История запросов " />
 
     </RelativeLayout>

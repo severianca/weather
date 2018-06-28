@@ -3,9 +3,11 @@ package com.example.mariaa.weather.ui;
 import android.arch.persistence.room.Room;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Icon;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,13 +15,16 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.example.mariaa.weather.App;
 import com.example.mariaa.weather.DataBase.DataBaseWeather;
 import com.example.mariaa.weather.DataBase.WeatherDB;
+import com.example.mariaa.weather.DataBaseActivity;
 import com.example.mariaa.weather.R;
 import com.example.mariaa.weather.model.MainWeather;
 import com.example.mariaa.weather.model.Weather;
@@ -33,7 +38,9 @@ import android.annotation.SuppressLint;
 import android.location.Location;
 import android.location.LocationListener;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 import static android.util.Log.*;
 
@@ -43,11 +50,13 @@ public class MainActivity extends AppCompatActivity {
     TextView text_temp, text_city, text_wind_clouds, textView;
     EditText text_city_enter_user;
     ImageView imageView;
+    Button but_database;
     private LocationManager manager;
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
     String City, Wind, Clouds, Temp, Icon;
     public DataBaseWeather dataBaseWeather;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,12 +67,17 @@ public class MainActivity extends AppCompatActivity {
         text_city = findViewById(R.id.text_city);
         text_city_enter_user = findViewById(R.id.text_city_enter_user);
         text_wind_clouds = findViewById(R.id.text_wind_clouds);
+        but_database = findViewById(R.id.but_database);
 
         imageView = (ImageView) findViewById(R.id.imageView);
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        dataBaseWeather = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherDB").build();
+        dataBaseWeather = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+                                .fallbackToDestructiveMigration()
+                                .allowMainThreadQueries()
+                                .build();
+
 
     }
 
@@ -172,14 +186,13 @@ public class MainActivity extends AppCompatActivity {
     public void AddInDB (String city, String wind, String clouds, String temp, String icon) {
 
         WeatherDB weather = new WeatherDB();
-        weather.setId(1);
         weather.setCity(city);
         weather.setWind(wind);
         weather.setClouds(clouds);
         weather.setTemn(temp);
         weather.setIcon(icon);
 
-        dataBaseWeather.daoWeather().AddWeather(weather);
+        dataBaseWeather.daoWeather().insert(weather);
         Toast.makeText(getApplicationContext(),"seccess", Toast.LENGTH_LONG).show();
 
     }
@@ -213,6 +226,13 @@ public class MainActivity extends AppCompatActivity {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
     }
+    
+    public void but_show_database(View view) {
+        Intent intent = new Intent(this, DataBaseActivity.class);
+        startActivity(intent);
+    }
+
+
 
 }
 
