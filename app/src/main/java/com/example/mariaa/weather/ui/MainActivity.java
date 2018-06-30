@@ -4,6 +4,8 @@ import android.arch.persistence.room.Room;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Icon;
@@ -38,6 +40,8 @@ import android.annotation.SuppressLint;
 import android.location.Location;
 import android.location.LocationListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -55,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
     String City, Wind, Clouds, Temp, Icon;
-    public DataBaseWeather dataBaseWeather;
+    public DataBaseWeather dataBaseWeather4;
+    Date Now;
+    SharedPreferences sPref;
 
 
     @Override
@@ -73,11 +79,12 @@ public class MainActivity extends AppCompatActivity {
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        dataBaseWeather = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather4 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                                 .fallbackToDestructiveMigration()
                                 .allowMainThreadQueries()
                                 .build();
 
+        Now= new Date();
 
     }
 
@@ -113,6 +120,13 @@ public class MainActivity extends AppCompatActivity {
       public void onProviderDisabled(String provider) {
            }
    };
+
+
+    public void ShowTextWeather() {
+        text_city.setText(City);
+        text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
+        text_temp.setText(Temp+" °C");
+    }
 
     public void ShowIconWeather (String Icon) {
 
@@ -164,17 +178,34 @@ public class MainActivity extends AppCompatActivity {
         App.getApiService().getWeather(city).enqueue(new Callback<MainWeather>() {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
-                City = city;
-                Wind = Double.toString(response.body().getWind().getSpeed());
-                Clouds = Double.toString(response.body().getClouds().getAll());
-                Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                Icon = response.body().getWeather().get(0).getIcon();
-                text_city.setText(City);
-                text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
-                text_temp.setText(Temp+" °C");
-                ShowIconWeather(Icon);
 
-               AddInDB(City, Wind, Clouds, Temp, Icon);
+                Date Early = dataBaseWeather4.daoWeather().getAll().get(dataBaseWeather4.daoWeather().getAll().size()-1).getDate();
+
+                if (Early.after(Now)) {
+                    //если новый день, то в базу добавляем прошлый запрос
+                    AddInDB(Early);
+                    //запоминает запрос за сегодня (вдруг последний) и выводим
+                    City = city;
+                    Wind = Double.toString(response.body().getWind().getSpeed());
+                    Clouds = Double.toString(response.body().getClouds().getAll());
+                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    Icon = response.body().getWeather().get(0).getIcon();
+                    AddPreferences();
+                    ShowTextWeather();
+                    ShowIconWeather(Icon);
+                }
+                else {
+                    //если день не изменился, то запоминаем
+                    City = city;
+                    Wind = Double.toString(response.body().getWind().getSpeed());
+                    Clouds = Double.toString(response.body().getClouds().getAll());
+                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    Icon = response.body().getWeather().get(0).getIcon();
+                    AddPreferences();
+                    ShowTextWeather();
+                    ShowIconWeather(Icon);
+                }
+
             }
 
             public void onFailure(Call<MainWeather> call, Throwable t) {
@@ -183,16 +214,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void AddInDB (String city, String wind, String clouds, String temp, String icon) {
+    public void AddInDB (Date date) {
+
+        sPref = getPreferences(MODE_PRIVATE);
 
         WeatherDB weather = new WeatherDB();
-        weather.setCity(city);
-        weather.setWind(wind);
-        weather.setClouds(clouds);
-        weather.setTemn(temp);
-        weather.setIcon(icon);
+        weather.setCity(sPref.getString("eCity", ""));
+        weather.setWind(sPref.getString("eWind", ""));
+        weather.setClouds(sPref.getString("eClouds", ""));
+        weather.setTemn(sPref.getString("eTemp", ""));
+        weather.setIcon(sPref.getString("eIcon", ""));
+        weather.setDate(date);
 
-        dataBaseWeather.daoWeather().insert(weather);
+        dataBaseWeather4.daoWeather().insert(weather);
         Toast.makeText(getApplicationContext(),"seccess", Toast.LENGTH_LONG).show();
 
     }
@@ -206,19 +240,58 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
 
-                City = response.body().getName();
-                Wind = Double.toString(response.body().getWind().getSpeed());
-                Clouds = Double.toString(response.body().getClouds().getAll());
-                Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                Icon = response.body().getWeather().get(0).getIcon();
-                text_city.setText(City);
-                text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
-                text_temp.setText(Temp+" °C");
-                ShowIconWeather(Icon);
-                AddInDB(City, Wind, Clouds, Temp, Icon);
+               Date Early = dataBaseWeather4.daoWeather().getAll().get(dataBaseWeather4.daoWeather().getAll().size()-1).getDate();
+
+                if (Early.after(Now)) {
+                    //если новый день, то в базу добавляем прошлый запрос
+                    AddInDB(Early);
+                    //запоминает запрос за сегодня (вдруг последний) и выводим
+                    City = response.body().getName();
+                    Wind = Double.toString(response.body().getWind().getSpeed());
+                    Clouds = Double.toString(response.body().getClouds().getAll());
+                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    Icon = response.body().getWeather().get(0).getIcon();
+                    AddPreferences();
+                    ShowTextWeather();
+                    ShowIconWeather(Icon);
+                }
+                else {
+                    //если день не изменился, то запоминаем
+                    City = response.body().getName();
+                    Wind = Double.toString(response.body().getWind().getSpeed());
+                    Clouds = Double.toString(response.body().getClouds().getAll());
+                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    Icon = response.body().getWeather().get(0).getIcon();
+                    AddPreferences();
+                    ShowTextWeather();
+                    ShowIconWeather(Icon);
+
+                }
+
             }
         });
     }
+
+    public void AddPreferences(){
+        sPref = getPreferences(MODE_PRIVATE);
+        Editor eCity = sPref.edit();
+        Editor eWind = sPref.edit();
+        Editor eClouds = sPref.edit();
+        Editor eTemp = sPref.edit();
+        Editor eIcon = sPref.edit();
+        eCity.putString("eCity", City);
+        eWind.putString("eWind", Wind);
+        eClouds.putString("eClouds", Clouds);
+        eTemp.putString("eTemp", Temp);
+        eIcon.putString("eIcon", Icon);
+        eCity.commit();
+        eWind.commit();
+        eClouds.commit();
+        eTemp.commit();
+        eIcon.commit();
+    }
+
+
 
     public void but_show_click(View view) {
         loadWeatherByCity(text_city_enter_user.getText().toString());

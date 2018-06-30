@@ -3,6 +3,8 @@ package com.example.mariaa.weather.DataBase;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
+import android.provider.ContactsContract;
 
 import java.util.Date;
 
@@ -21,6 +23,9 @@ public class WeatherDB {
     public String Temn;
     @ColumnInfo(name = "Icon")
     public String Icon;
+    @ColumnInfo(name = "Date")
+    @TypeConverters({Converters.class})
+    public Date Date;
 
     public long getId() {
         return id;
@@ -62,12 +67,14 @@ public class WeatherDB {
         Temn = temn;
     }
 
-    public String getIcon() {
-        return Icon;
+    public String getIcon() {return Icon;}
+
+    public void setIcon(String icon) {Icon = icon; }
+
+    public Date getDate() {
+        return Date;
     }
 
-    public void setIcon(String icon) {
-        Icon = icon;
-    }
+    public void setDate(Date date) { Date = date;  }
 
 }

@@ -10,6 +10,7 @@ import com.example.mariaa.weather.DataBase.DataBaseWeather;
 import com.example.mariaa.weather.DataBase.WeatherDB;
 import com.example.mariaa.weather.model.Weather;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -17,8 +18,9 @@ import java.util.Date;
 public class DataBaseActivity extends AppCompatActivity {
 
     TextView text_database;
-    public DataBaseWeather dataBaseWeather;
+    public DataBaseWeather dataBaseWeather4;
     String info;
+    SimpleDateFormat formatForDateNow;
 
 
     @Override
@@ -27,13 +29,13 @@ public class DataBaseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_data_base);
         text_database = findViewById(R.id.text_database);
 
-        dataBaseWeather = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather4 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
 
 
-        List<WeatherDB> weatherDBList = dataBaseWeather.daoWeather().getAll();
+        List<WeatherDB> weatherDBList = dataBaseWeather4.daoWeather().getAll();
 
         info = "";
 
@@ -43,9 +45,10 @@ public class DataBaseActivity extends AppCompatActivity {
             String temp = weatherDBList.get(i).getTemn();
             String wind = weatherDBList.get(i).getWind();
             String clouds = weatherDBList.get(i).getClouds();
+            Date date = weatherDBList.get(i).getDate();
+            formatForDateNow = new SimpleDateFormat("dd.MM.yyyy");
 
-            info = info + city + " " + temp + " °C" + " wind: " + wind + "m/c. " + "clods: " + clouds + "%" + "\n";
-
+            info = info + formatForDateNow.format(date) + " " + city + " " + temp + " °C" + " wind: " + wind + "m/c. " + "clods: " + clouds + "%" + "\n";
         }
 
         text_database.setText(info);
