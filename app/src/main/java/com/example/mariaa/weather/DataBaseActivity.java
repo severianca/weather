@@ -11,6 +11,7 @@ import com.example.mariaa.weather.DataBase.WeatherDB;
 import com.example.mariaa.weather.model.Weather;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -18,7 +19,7 @@ import java.util.Date;
 public class DataBaseActivity extends AppCompatActivity {
 
     TextView text_database;
-    public DataBaseWeather dataBaseWeather4;
+    public DataBaseWeather dataBaseWeather5;
     String info;
     SimpleDateFormat formatForDateNow;
 
@@ -29,13 +30,13 @@ public class DataBaseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_data_base);
         text_database = findViewById(R.id.text_database);
 
-        dataBaseWeather4 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather5 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
 
 
-        List<WeatherDB> weatherDBList = dataBaseWeather4.daoWeather().getAll();
+        List<WeatherDB> weatherDBList = dataBaseWeather5.daoWeather().getAll();
 
         info = "";
 

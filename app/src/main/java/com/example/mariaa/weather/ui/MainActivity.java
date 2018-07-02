@@ -1,19 +1,10 @@
 package com.example.mariaa.weather.ui;
 
 import android.arch.persistence.room.Room;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.drawable.Icon;
-import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -29,7 +20,6 @@ import com.example.mariaa.weather.DataBase.WeatherDB;
 import com.example.mariaa.weather.DataBaseActivity;
 import com.example.mariaa.weather.R;
 import com.example.mariaa.weather.model.MainWeather;
-import com.example.mariaa.weather.model.Weather;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,13 +30,8 @@ import android.annotation.SuppressLint;
 import android.location.Location;
 import android.location.LocationListener;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Date;
-
-import static android.util.Log.*;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -59,9 +44,9 @@ public class MainActivity extends AppCompatActivity {
     Double latitude, longitude;
     Boolean one_response= false;//определение местоположения только один раз (при запуске)
     String City, Wind, Clouds, Temp, Icon;
-    public DataBaseWeather dataBaseWeather4;
+    public DataBaseWeather dataBaseWeather5;
     Date Now;
-    SharedPreferences sPref;
+    SimpleDateFormat formatForDateNow;
 
 
     @Override
@@ -79,12 +64,13 @@ public class MainActivity extends AppCompatActivity {
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        dataBaseWeather4 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather5 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                                 .fallbackToDestructiveMigration()
                                 .allowMainThreadQueries()
                                 .build();
 
-        Now= new Date();
+        Now = new Date();
+        formatForDateNow = new SimpleDateFormat("dd.MM.yyyy");
 
     }
 
@@ -179,29 +165,25 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
 
-                Date Early = dataBaseWeather4.daoWeather().getAll().get(dataBaseWeather4.daoWeather().getAll().size()-1).getDate();
-
-                if (Early.after(Now)) {
-                    //если новый день, то в базу добавляем прошлый запрос
-                    AddInDB(Early);
-                    //запоминает запрос за сегодня (вдруг последний) и выводим
-                    City = city;
+                Date Early =  dataBaseWeather5.daoWeather().getAll().get(dataBaseWeather5.daoWeather().getAll().size()-1).getDate();
+                String sEarly = formatForDateNow.format(Early);
+                String sNow = formatForDateNow.format(Now);
+                if (sEarly.compareTo(sNow) >0){
+                    //если новый день
+                    City = response.body().getName();
                     Wind = Double.toString(response.body().getWind().getSpeed());
                     Clouds = Double.toString(response.body().getClouds().getAll());
                     Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
                     Icon = response.body().getWeather().get(0).getIcon();
-                    AddPreferences();
                     ShowTextWeather();
                     ShowIconWeather(Icon);
-                }
-                else {
-                    //если день не изменился, то запоминаем
-                    City = city;
+                    AddInDB(City, Wind, Clouds, Temp, Icon, Now);
+                }else {
+                    City = response.body().getName();
                     Wind = Double.toString(response.body().getWind().getSpeed());
                     Clouds = Double.toString(response.body().getClouds().getAll());
                     Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
                     Icon = response.body().getWeather().get(0).getIcon();
-                    AddPreferences();
                     ShowTextWeather();
                     ShowIconWeather(Icon);
                 }
@@ -214,19 +196,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void AddInDB (Date date) {
-
-        sPref = getPreferences(MODE_PRIVATE);
+    public void AddInDB (String aCity, String aWind, String aClouds, String aTemp, String aIcon, Date aNow) {
 
         WeatherDB weather = new WeatherDB();
-        weather.setCity(sPref.getString("eCity", ""));
-        weather.setWind(sPref.getString("eWind", ""));
-        weather.setClouds(sPref.getString("eClouds", ""));
-        weather.setTemn(sPref.getString("eTemp", ""));
-        weather.setIcon(sPref.getString("eIcon", ""));
-        weather.setDate(date);
+        weather.setCity(aCity);
+        weather.setWind(aWind);
+        weather.setClouds(aClouds);
+        weather.setTemn(aTemp);
+        weather.setIcon(aIcon);
+        weather.setDate(aNow);
 
-        dataBaseWeather4.daoWeather().insert(weather);
+        dataBaseWeather5.daoWeather().insert(weather);
         Toast.makeText(getApplicationContext(),"seccess", Toast.LENGTH_LONG).show();
 
     }
@@ -240,55 +220,41 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
 
-               Date Early = dataBaseWeather4.daoWeather().getAll().get(dataBaseWeather4.daoWeather().getAll().size()-1).getDate();
-
-                if (Early.after(Now)) {
-                    //если новый день, то в базу добавляем прошлый запрос
-                    AddInDB(Early);
-                    //запоминает запрос за сегодня (вдруг последний) и выводим
+                if (dataBaseWeather5.daoWeather().getAll().size()==0){
                     City = response.body().getName();
                     Wind = Double.toString(response.body().getWind().getSpeed());
                     Clouds = Double.toString(response.body().getClouds().getAll());
                     Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
                     Icon = response.body().getWeather().get(0).getIcon();
-                    AddPreferences();
                     ShowTextWeather();
                     ShowIconWeather(Icon);
+                    AddInDB(City, Wind, Clouds, Temp, Icon, Now);
+                } else {
+                    Date Early =  dataBaseWeather5.daoWeather().getAll().get(dataBaseWeather5.daoWeather().getAll().size()-1).getDate();
+                    String sEarly = formatForDateNow.format(Early);
+                    String sNow = formatForDateNow.format(Now);
+                    if (sNow.compareTo(sEarly)>0){
+                        //если новый день
+                        City = response.body().getName();
+                        Wind = Double.toString(response.body().getWind().getSpeed());
+                        Clouds = Double.toString(response.body().getClouds().getAll());
+                        Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                        Icon = response.body().getWeather().get(0).getIcon();
+                        ShowTextWeather();
+                        ShowIconWeather(Icon);
+                        AddInDB(City, Wind, Clouds, Temp, Icon, Now);
+                    }if (sNow.compareTo(sEarly)<0){
+                        City = response.body().getName();
+                        Wind = Double.toString(response.body().getWind().getSpeed());
+                        Clouds = Double.toString(response.body().getClouds().getAll());
+                        Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                        Icon = response.body().getWeather().get(0).getIcon();
+                        ShowTextWeather();
+                        ShowIconWeather(Icon);
+                    }
                 }
-                else {
-                    //если день не изменился, то запоминаем
-                    City = response.body().getName();
-                    Wind = Double.toString(response.body().getWind().getSpeed());
-                    Clouds = Double.toString(response.body().getClouds().getAll());
-                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                    Icon = response.body().getWeather().get(0).getIcon();
-                    AddPreferences();
-                    ShowTextWeather();
-                    ShowIconWeather(Icon);
-
-                }
-
             }
         });
-    }
-
-    public void AddPreferences(){
-        sPref = getPreferences(MODE_PRIVATE);
-        Editor eCity = sPref.edit();
-        Editor eWind = sPref.edit();
-        Editor eClouds = sPref.edit();
-        Editor eTemp = sPref.edit();
-        Editor eIcon = sPref.edit();
-        eCity.putString("eCity", City);
-        eWind.putString("eWind", Wind);
-        eClouds.putString("eClouds", Clouds);
-        eTemp.putString("eTemp", Temp);
-        eIcon.putString("eIcon", Icon);
-        eCity.commit();
-        eWind.commit();
-        eClouds.commit();
-        eTemp.commit();
-        eIcon.commit();
     }
 
 
