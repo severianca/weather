@@ -19,7 +19,7 @@ import java.util.Date;
 public class DataBaseActivity extends AppCompatActivity {
 
     TextView text_database;
-    public DataBaseWeather dataBaseWeather5;
+    public DataBaseWeather dataBaseWeather00;
     String info;
     SimpleDateFormat formatForDateNow;
 
@@ -30,17 +30,17 @@ public class DataBaseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_data_base);
         text_database = findViewById(R.id.text_database);
 
-        dataBaseWeather5 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather00 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
 
 
-        List<WeatherDB> weatherDBList = dataBaseWeather5.daoWeather().getAll();
+        List<WeatherDB> weatherDBList = dataBaseWeather00.daoWeather().getAll();
 
         info = "";
 
-        for (int i=0; i<weatherDBList.size(); i++) {
+        for (int i=1; i<weatherDBList.size(); i++) {
 
             String city = weatherDBList.get(i).getCity();
             String temp = weatherDBList.get(i).getTemn();
@@ -49,7 +49,7 @@ public class DataBaseActivity extends AppCompatActivity {
             Date date = weatherDBList.get(i).getDate();
             formatForDateNow = new SimpleDateFormat("dd.MM.yyyy");
 
-            info = info + formatForDateNow.format(date) + " " + city + " " + temp + " °C" + " wind: " + wind + "m/c. " + "clods: " + clouds + "%" + "\n";
+            info = info + " " + formatForDateNow.format(date) + " " + city + " " + temp + " °C" + " wind: " + wind + "m/c. " + "clods: " + clouds + "%" + "\n";
         }
 
         text_database.setText(info);

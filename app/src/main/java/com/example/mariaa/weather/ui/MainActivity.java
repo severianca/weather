@@ -36,16 +36,16 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView text_temp, text_city, text_wind_clouds, textView;
-    EditText text_city_enter_user;
+    TextView textTemp, textCity, textWindClouds;
+    EditText textCityEnterUser;
     ImageView imageView;
-    Button but_database;
+    Button butttonDatabase;
     private LocationManager manager;
     Double latitude, longitude;
-    Boolean one_response= false;//определение местоположения только один раз (при запуске)
-    String City, Wind, Clouds, Temp, Icon;
-    public DataBaseWeather dataBaseWeather5;
-    Date Now;
+    Boolean oneResponse = false;//определение местоположения только один раз (при запуске)
+    String city, wind, clouds, temp, icon;
+    public DataBaseWeather dataBaseWeather00;
+    Date now;
     SimpleDateFormat formatForDateNow;
 
 
@@ -54,22 +54,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        text_temp = findViewById(R.id.text_temp);
-        text_city = findViewById(R.id.text_city);
-        text_city_enter_user = findViewById(R.id.text_city_enter_user);
-        text_wind_clouds = findViewById(R.id.text_wind_clouds);
-        but_database = findViewById(R.id.but_database);
+        textTemp = findViewById(R.id.text_temp);
+        textCity = findViewById(R.id.text_city);
+        textCityEnterUser = findViewById(R.id.text_city_enter_user);
+        textWindClouds = findViewById(R.id.text_wind_clouds);
+        butttonDatabase = findViewById(R.id.but_database);
 
         imageView = (ImageView) findViewById(R.id.imageView);
 
         manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        dataBaseWeather5 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
+        dataBaseWeather00 = Room.databaseBuilder(getApplicationContext(),DataBaseWeather.class, "WeatherTable")
                                 .fallbackToDestructiveMigration()
                                 .allowMainThreadQueries()
                                 .build();
 
-        Now = new Date();
+        now = new Date();
         formatForDateNow = new SimpleDateFormat("dd.MM.yyyy");
 
     }
@@ -87,12 +87,11 @@ public class MainActivity extends AppCompatActivity {
            if (location!=null) {
                longitude = location.getLongitude();
                latitude = location.getLatitude();
-               if (!one_response) {
+               if (!oneResponse) {
                    loadWeatherLocation(longitude, latitude);
-                   one_response= true;
+                   oneResponse = true;
                }
-               }
-               else {
+               } else {
                Toast.makeText(getApplicationContext(), "отсутствует подключение к интернету", Toast.LENGTH_SHORT).show();
            }
                }
@@ -108,13 +107,13 @@ public class MainActivity extends AppCompatActivity {
    };
 
 
-    public void ShowTextWeather() {
-        text_city.setText(City);
-        text_wind_clouds.setText("wind "+ Wind + " m/s. " + "clouds " + Clouds + "%" );
-        text_temp.setText(Temp+" °C");
+    public void showTextWeather() {
+        textCity.setText(city);
+        textWindClouds.setText("wind "+ wind + " m/s. " + "clouds " + clouds + "%" );
+        textTemp.setText(temp +" °C");
     }
 
-    public void ShowIconWeather (String Icon) {
+    public void showIconWeather(String Icon) {
 
         switch (Icon) {
 
@@ -155,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
             case "50n" : imageView.setImageResource(R.drawable.ic_50n);
                 break;
                 default: imageView.setImageResource(R.drawable.ic_launcher_foreground);
-
         }
 
     }
@@ -165,27 +163,27 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
 
-                Date Early =  dataBaseWeather5.daoWeather().getAll().get(dataBaseWeather5.daoWeather().getAll().size()-1).getDate();
-                String sEarly = formatForDateNow.format(Early);
-                String sNow = formatForDateNow.format(Now);
+                Date early =  dataBaseWeather00.daoWeather().getAll().get(dataBaseWeather00.daoWeather().getAll().size()-1).getDate();
+                String sEarly = formatForDateNow.format(early);
+                String sNow = formatForDateNow.format(now);
                 if (sEarly.compareTo(sNow) >0){
                     //если новый день
-                    City = response.body().getName();
-                    Wind = Double.toString(response.body().getWind().getSpeed());
-                    Clouds = Double.toString(response.body().getClouds().getAll());
-                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                    Icon = response.body().getWeather().get(0).getIcon();
-                    ShowTextWeather();
-                    ShowIconWeather(Icon);
-                    AddInDB(City, Wind, Clouds, Temp, Icon, Now);
+                    MainActivity.this.city = response.body().getName();
+                    wind = Double.toString(response.body().getWind().getSpeed());
+                    clouds = Double.toString(response.body().getClouds().getAll());
+                    temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    icon = response.body().getWeather().get(0).getIcon();
+                    showTextWeather();
+                    showIconWeather(icon);
+                    addInDB(MainActivity.this.city, wind, clouds, temp, icon, now);
                 }else {
-                    City = response.body().getName();
-                    Wind = Double.toString(response.body().getWind().getSpeed());
-                    Clouds = Double.toString(response.body().getClouds().getAll());
-                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                    Icon = response.body().getWeather().get(0).getIcon();
-                    ShowTextWeather();
-                    ShowIconWeather(Icon);
+                    MainActivity.this.city = response.body().getName();
+                    wind = Double.toString(response.body().getWind().getSpeed());
+                    clouds = Double.toString(response.body().getClouds().getAll());
+                    temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    icon = response.body().getWeather().get(0).getIcon();
+                    showTextWeather();
+                    showIconWeather(icon);
                 }
 
             }
@@ -196,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void AddInDB (String aCity, String aWind, String aClouds, String aTemp, String aIcon, Date aNow) {
+    public void addInDB(String aCity, String aWind, String aClouds, String aTemp, String aIcon, Date aNow) {
 
         WeatherDB weather = new WeatherDB();
         weather.setCity(aCity);
@@ -206,9 +204,7 @@ public class MainActivity extends AppCompatActivity {
         weather.setIcon(aIcon);
         weather.setDate(aNow);
 
-        dataBaseWeather5.daoWeather().insert(weather);
-        Toast.makeText(getApplicationContext(),"seccess", Toast.LENGTH_LONG).show();
-
+        dataBaseWeather00.daoWeather().insert(weather);
     }
 
     private void loadWeatherLocation(final Double lon, final Double lat) {
@@ -220,47 +216,45 @@ public class MainActivity extends AppCompatActivity {
 
             public void onResponse(Call<MainWeather> call, Response<MainWeather> response) {
 
-                if (dataBaseWeather5.daoWeather().getAll().size()==0){
-                    City = response.body().getName();
-                    Wind = Double.toString(response.body().getWind().getSpeed());
-                    Clouds = Double.toString(response.body().getClouds().getAll());
-                    Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                    Icon = response.body().getWeather().get(0).getIcon();
-                    ShowTextWeather();
-                    ShowIconWeather(Icon);
-                    AddInDB(City, Wind, Clouds, Temp, Icon, Now);
+                if (dataBaseWeather00.daoWeather().getAll().size()==0){
+                    city = response.body().getName();
+                    wind = Double.toString(response.body().getWind().getSpeed());
+                    clouds = Double.toString(response.body().getClouds().getAll());
+                    temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                    icon = response.body().getWeather().get(0).getIcon();
+                    showTextWeather();
+                    showIconWeather(icon);
+                    addInDB(city, wind, clouds, temp, icon, now);
                 } else {
-                    Date Early =  dataBaseWeather5.daoWeather().getAll().get(dataBaseWeather5.daoWeather().getAll().size()-1).getDate();
+                    Date Early =  dataBaseWeather00.daoWeather().getAll().get(dataBaseWeather00.daoWeather().getAll().size()-1).getDate();
                     String sEarly = formatForDateNow.format(Early);
-                    String sNow = formatForDateNow.format(Now);
+                    String sNow = formatForDateNow.format(now);
                     if (sNow.compareTo(sEarly)>0){
                         //если новый день
-                        City = response.body().getName();
-                        Wind = Double.toString(response.body().getWind().getSpeed());
-                        Clouds = Double.toString(response.body().getClouds().getAll());
-                        Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                        Icon = response.body().getWeather().get(0).getIcon();
-                        ShowTextWeather();
-                        ShowIconWeather(Icon);
-                        AddInDB(City, Wind, Clouds, Temp, Icon, Now);
-                    }if (sNow.compareTo(sEarly)<0){
-                        City = response.body().getName();
-                        Wind = Double.toString(response.body().getWind().getSpeed());
-                        Clouds = Double.toString(response.body().getClouds().getAll());
-                        Temp = Double.toString( (int) response.body().getMain().getTemp()-273);
-                        Icon = response.body().getWeather().get(0).getIcon();
-                        ShowTextWeather();
-                        ShowIconWeather(Icon);
+                        city = response.body().getName();
+                        wind = Double.toString(response.body().getWind().getSpeed());
+                        clouds = Double.toString(response.body().getClouds().getAll());
+                        temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                        icon = response.body().getWeather().get(0).getIcon();
+                        showTextWeather();
+                        showIconWeather(icon);
+                        addInDB(city, wind, clouds, temp, icon, now);
+                    }if (sNow.compareTo(sEarly)==0){
+                        city = response.body().getName();
+                        wind = Double.toString(response.body().getWind().getSpeed());
+                        clouds = Double.toString(response.body().getClouds().getAll());
+                        temp = Double.toString( (int) response.body().getMain().getTemp()-273);
+                        icon = response.body().getWeather().get(0).getIcon();
+                        showTextWeather();
+                        showIconWeather(icon);
                     }
                 }
             }
         });
     }
 
-
-
     public void but_show_click(View view) {
-        loadWeatherByCity(text_city_enter_user.getText().toString());
+        loadWeatherByCity(textCityEnterUser.getText().toString());
         //закрытие клавиатуры
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
@@ -270,8 +264,5 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, DataBaseActivity.class);
         startActivity(intent);
     }
-
-
-
 }
 
